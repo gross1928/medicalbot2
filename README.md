@@ -1,37 +1,104 @@
-# Medical AI Telegram Bot
+# Medical Telegram Bot 🏥🤖
 
-This is a Telegram bot that acts as an AI health analyzer. It analyzes user-submitted medical test results (like blood work, urine tests, etc.) and provides holistic recommendations for improving physical and spiritual well-being.
+AI-powered Telegram бот для анализа медицинских результатов с использованием OpenAI и хранением в Supabase.
 
-## Features
+## 🌟 Возможности
 
-- Connects to the OpenAI API (GPT-4o and others) for analysis.
-- Processes files, photos, and text uploaded by the user.
-- Provides recommendations for improving lifestyle.
-- Uses Supabase (PostgreSQL) as a database to store user history, analyses, and recommendations.
+- ✅ Анализ медицинских результатов из текста или изображений
+- 🧠 AI-рекомендации на основе OpenAI
+- 📊 История анализов пользователей
+- 📱 Поддержка множественных форматов файлов
+- 🔒 Безопасное хранение в Supabase
+- 🚀 Готов к развертыванию на Railway
 
-## Setup
+## 🚀 Быстрое развертывание на Railway
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd medical-telegram-bot
-    ```
+### 1. Подготовка
+1. Fork этого репозитория на GitHub
+2. Создайте аккаунт на [railway.app](https://railway.app)
+3. Подключите ваш GitHub к Railway
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+### 2. Создание сервисов
+Создайте новый проект в Railway и добавьте переменные окружения:
 
-3.  **Set up environment variables:**
-    Create a `.env` file in the root directory and add the following variables:
-    ```
-    TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-    OPENAI_API_KEY=your_openai_api_key
-    SUPABASE_URL=your_supabase_project_url
-    SUPABASE_KEY=your_supabase_anon_key
-    ```
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+OPENAI_API_KEY=your_openai_api_key
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+```
 
-4.  **Run the bot:**
-    ```bash
-    npm start
-    ```
+### 3. Получение токенов
+
+#### Telegram Bot Token
+1. Найдите [@BotFather](https://t.me/botfather) в Telegram
+2. Отправьте `/newbot`
+3. Следуйте инструкциям и получите токен
+
+#### OpenAI API Key
+1. Зайдите на [platform.openai.com](https://platform.openai.com)
+2. Создайте API ключ в разделе API Keys
+
+#### Supabase настройки
+См. подробные инструкции в [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
+
+## 🛠 Локальная разработка
+
+### Установка
+```bash
+git clone https://github.com/your-username/medicalbot2.git
+cd medicalbot2
+npm install
+```
+
+### Настройка окружения
+Скопируйте `env.example` в `.env` и заполните ваши токены:
+```bash
+cp env.example .env
+# Отредактируйте .env файл
+```
+
+### Запуск
+```bash
+npm start
+```
+
+## 📖 Использование
+
+1. **Начать работу**: Отправьте `/start` боту
+2. **Анализ текста**: Просто отправьте текст с результатами анализов
+3. **Анализ изображений**: Отправьте фото или документ с результатами
+4. **История**: Используйте `/history` для просмотра предыдущих анализов
+5. **Справка**: `/help` для получения помощи
+
+## 🔧 Структура проекта
+
+```
+medicalbot2/
+├── index.js              # Основной файл бота
+├── fileHandler.js         # Обработка загрузки файлов
+├── openaiService.js       # Интеграция с OpenAI
+├── supabaseClient.js      # Клиент Supabase
+├── schema.sql             # Схема базы данных
+├── env.example            # Пример переменных окружения
+├── SUPABASE_SETUP.md      # Настройка Supabase
+└── README.md              # Документация
+```
+
+## 🐛 Решение проблем
+
+### Ошибка "409 Conflict"
+- Остановите все другие экземпляры бота
+- На Windows: `taskkill /F /IM node.exe`
+
+### Ошибка "Bucket not found"
+- Проверьте настройки Supabase Storage
+- См. [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
+
+### Проблемы с Railway
+- Проверьте логи приложения в Dashboard
+- Убедитесь, что все переменные окружения установлены
+
+## 📝 Лицензия
+
+MIT License - используйте свободно для ваших проектов!
