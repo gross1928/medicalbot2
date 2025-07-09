@@ -22,6 +22,13 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, { polling: true });
 
+// Добавим меню команд, чтобы Telegram показывал их в интерфейсе
+bot.setMyCommands([
+    { command: 'start', description: 'Начать работу с ботом' },
+    { command: 'help', description: 'Показать справку' },
+    { command: 'history', description: 'История ваших анализов' },
+]);
+
 console.log('Bot has been started...');
 
 // Constants for validation
@@ -86,14 +93,14 @@ const getOrCreateUser = async (msg) => {
 bot.onText(/\/help/, (msg) => {
     const chatId = msg.chat.id;
     const helpMessage = `
-Welcome to the AI Health Analyzer Bot!
+Добро пожаловать в AI Анализатор Здоровья!
 
-Here are the available commands:
-/start - Start interacting with the bot
-/help - Show this help message
-/history - View your past analysis history
+Доступные команды:
+/start - начать работу с ботом
+/help - показать это справочное сообщение
+/history - посмотреть историю ваших анализов
 
-Simply send me a text, photo, or an image file of your medical tests, and I will provide a detailed analysis and recommendations.
+Просто отправьте мне текст, фото или изображение ваших медицинских результатов, и я предоставлю подробный анализ и рекомендации.
 `;
     bot.sendMessage(chatId, helpMessage);
 });
@@ -102,11 +109,11 @@ bot.onText(/\/history/, async (msg) => {
     const chatId = msg.chat.id;
     const user = await getOrCreateUser(msg);
     if (!user) {
-        bot.sendMessage(chatId, "Sorry, there was a database error.");
+        bot.sendMessage(chatId, "Извините, произошла ошибка базы данных.");
         return;
     }
 
-    bot.sendMessage(chatId, "Fetching your analysis history, please wait...");
+    bot.sendMessage(chatId, "Получаю историю ваших анализов, пожалуйста, подождите...");
 
     const { data, error } = await supabase
         .from('analyses')
@@ -117,30 +124,30 @@ bot.onText(/\/history/, async (msg) => {
 
     if (error) {
         console.error('Error fetching history:', error);
-        bot.sendMessage(chatId, "Sorry, I couldn't retrieve your history.");
+        bot.sendMessage(chatId, "Извините, не удалось получить вашу историю.");
         return;
     }
 
     if (!data || data.length === 0) {
-        bot.sendMessage(chatId, "You don't have any analysis history yet.");
+        bot.sendMessage(chatId, "У вас пока нет истории анализов.");
         return;
     }
 
-    let historyMessage = 'Here is your last 5 analyses:\n\n';
+    let historyMessage = 'Вот ваши последние 5 анализов:\n\n';
     for (const analysis of data) {
         const date = new Date(analysis.created_at).toLocaleString();
         let analysisContent = '';
         if (analysis.input_text) {
-            analysisContent = `Text: "${analysis.input_text.substring(0, 50)}..."`;
+            analysisContent = `Текст: \"${analysis.input_text.substring(0, 50)}...\"`;
         } else if (analysis.file_url) {
-            analysisContent = 'Analysis from a file.';
+            analysisContent = 'Анализ из файла.';
         }
 
         const recommendation = analysis.recommendations.length > 0 
             ? analysis.recommendations[0].recommendation_text.substring(0, 100) + '...'
-            : 'No recommendation found.';
+            : 'Рекомендации не найдены.';
 
-        historyMessage += `*${date}*\n- ${analysisContent}\n- Recommendation: _${recommendation}_\n\n`;
+        historyMessage += `*${date}*\n- ${analysisContent}\n- Рекомендация: _${recommendation}_\n\n`;
     }
 
     bot.sendMessage(chatId, historyMessage, { parse_mode: 'Markdown' });
@@ -149,21 +156,29 @@ bot.onText(/\/history/, async (msg) => {
 bot.onText(/\/start/, async (msg) => {
     const user = await getOrCreateUser(msg);
     if (!user) {
-        bot.sendMessage(msg.chat.id, "Sorry, there was a database error. Please try again later.");
+        bot.sendMessage(msg.chat.id, "Извините, ошибка базы данных. Пожалуйста, попробуйте позже.");
         return;
     }
     const chatId = msg.chat.id;
     const userName = msg.from.first_name;
 
     const welcomeMessage = `
-Hello, ${userName}! Welcome to the AI Health Analyzer Bot. 
+Привет, ${userName}! Добро пожаловать в AI Анализатор Здоровья.
 
-I can analyze your medical test results and provide personalized recommendations. 
+Я могу проанализировать ваши медицинские анализы и предоставить персональные рекомендации.
 
-To get started, simply send me a text, photo, or document with your test results.
+Чтобы начать, просто отправьте мне текст, фото или документ с результатами ваших анализов.
 `;
 
-    bot.sendMessage(chatId, welcomeMessage);
+    bot.sendMessage(chatId, welcomeMessage, {
+        reply_markup: {
+            keyboard: [
+                ['/help', '/history'],
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: false,
+        },
+    });
 });
 
 // Listen for any kind of message
@@ -179,7 +194,7 @@ bot.on('photo', async (msg) => {
     const chatId = msg.chat.id;
     const user = await getOrCreateUser(msg);
     if (!user) {
-        bot.sendMessage(chatId, "Sorry, there was a database error. Please try again later.");
+        bot.sendMessage(chatId, "Извините, ошибка базы данных. Пожалуйста, попробуйте позже.");
         return;
     }
 
@@ -189,11 +204,11 @@ bot.on('photo', async (msg) => {
         
         // Validate file size
         if (!isFileSizeValid(photo.file_size)) {
-            bot.sendMessage(chatId, `Sorry, the file is too large. Maximum file size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+            bot.sendMessage(chatId, `Извините, файл слишком большой. Максимальный размер файла ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
             return;
         }
 
-        bot.sendMessage(chatId, 'Photo received. Processing, please wait...');
+        bot.sendMessage(chatId, 'Фото получено. Обрабатываю, пожалуйста, подождите...');
 
         const fileId = photo.file_id;
         const fileName = `user_${user.id}_${Date.now()}.jpg`;
@@ -214,7 +229,7 @@ bot.on('photo', async (msg) => {
         if (insertError) throw new Error(`DB insert error: ${insertError.message}`);
 
         // 4. Analyze the image
-        const prompt = msg.caption || 'Analyze the attached medical test results.';
+        const prompt = msg.caption || 'Проанализируй приложенные результаты медицинских тестов.';
         const recommendationText = await analyzeImage(publicUrl, prompt);
 
         // 5. Save recommendation and update status
@@ -226,7 +241,7 @@ bot.on('photo', async (msg) => {
 
     } catch (error) {
         console.error('Error processing photo:', error);
-        bot.sendMessage(chatId, 'Sorry, an error occurred while processing your photo.');
+        bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего фото.');
     }
 });
 
@@ -234,7 +249,7 @@ bot.on('document', async (msg) => {
     const chatId = msg.chat.id;
     const user = await getOrCreateUser(msg);
     if (!user) {
-        bot.sendMessage(chatId, "Sorry, there was a database error. Please try again later.");
+        bot.sendMessage(chatId, "Извините, ошибка базы данных. Пожалуйста, попробуйте позже.");
         return;
     }
 
@@ -244,13 +259,13 @@ bot.on('document', async (msg) => {
 
     // Validate file size
     if (!isFileSizeValid(doc.file_size)) {
-        bot.sendMessage(chatId, `Sorry, the file is too large. Maximum file size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+        bot.sendMessage(chatId, `Извините, файл слишком большой. Максимальный размер файла ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
         return;
     }
 
     // Check if the document is an image
     if (doc.mime_type && doc.mime_type.startsWith('image/')) {
-        bot.sendMessage(chatId, 'Image file received. Processing, please wait...');
+        bot.sendMessage(chatId, 'Изображение получено. Обрабатываю, пожалуйста, подождите...');
         try {
             const fileBuffer = await downloadFileFromTelegram(fileId);
             const publicUrl = await uploadToSupabase(fileBuffer, `user_${user.id}_${Date.now()}_${fileName}`);
@@ -262,7 +277,7 @@ bot.on('document', async (msg) => {
 
             if (insertError) throw new Error(`DB insert error: ${insertError.message}`);
 
-            const prompt = msg.caption || 'Analyze the attached medical test results.';
+            const prompt = msg.caption || 'Проанализируй приложенные результаты медицинских тестов.';
             const recommendationText = await analyzeImage(publicUrl, prompt);
 
             await supabase.from('recommendations').insert([{ analysis_id: analysis.id, user_id: user.id, recommendation_text: recommendationText }]);
@@ -271,11 +286,11 @@ bot.on('document', async (msg) => {
             bot.sendMessage(chatId, recommendationText);
         } catch (error) {
             console.error('Error processing document (image):', error);
-            bot.sendMessage(chatId, 'Sorry, an error occurred while processing your file.');
+            bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего файла.');
         }
     } else {
         // Handle other file types like PDF, etc.
-        bot.sendMessage(chatId, "Thank you for the document. Currently, I can only analyze images and plain text. PDF and other document format analysis is coming soon! Please send your results as a photo or copy the text into a message.");
+        bot.sendMessage(chatId, "Спасибо за документ. В настоящее время я могу анализировать только изображения и обычный текст. Поддержка PDF и других форматов появится позже! Пожалуйста, отправьте результаты в виде фото или скопируйте текст в сообщение.");
     }
 });
 
@@ -301,18 +316,18 @@ bot.on('message', async (msg) => {
 
     // Validate text length
     if (!isTextLengthValid(msg.text)) {
-        bot.sendMessage(chatId, `Sorry, your message is too long. Maximum length is ${MAX_TEXT_LENGTH} characters. Please shorten your message.`);
+        bot.sendMessage(chatId, `Извините, ваше сообщение слишком длинное. Максимальная длина — ${MAX_TEXT_LENGTH} символов. Пожалуйста, сократите сообщение.`);
         return;
     }
 
     const user = await getOrCreateUser(msg);
     if (!user) {
-        bot.sendMessage(chatId, "Sorry, there was a database error. Please try again later.");
+        bot.sendMessage(chatId, "Извините, ошибка базы данных. Пожалуйста, попробуйте позже.");
         return;
     }
 
     // Let the user know we are working on it
-    bot.sendMessage(chatId, 'I have received your message. Analyzing the data, please wait...');
+    bot.sendMessage(chatId, 'Я получил ваше сообщение. Анализирую данные, пожалуйста, подождите...');
 
     try {
         // 1. Save the analysis request to the database
@@ -350,7 +365,7 @@ bot.on('message', async (msg) => {
 
     } catch (error) {
         console.error('Error processing message:', error);
-        bot.sendMessage(chatId, 'Sorry, something went wrong while processing your request.');
+        bot.sendMessage(chatId, 'Извините, что-то пошло не так при обработке вашего запроса.');
     }
 });
 

@@ -14,7 +14,7 @@ CREATE TABLE public.users (
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 -- Policy: Users can see their own data.
 CREATE POLICY "Allow individual user access" ON public.users FOR SELECT
-USING (auth.uid() = id::uuid);
+USING (auth.uid()::text = id::text);
 -- Policy: Allow service roles to insert data (for our bot)
 CREATE POLICY "Allow service role insert" ON public.users FOR INSERT
 WITH CHECK (true);
@@ -35,7 +35,7 @@ CREATE TABLE public.analyses (
 ALTER TABLE public.analyses ENABLE ROW LEVEL SECURITY;
 -- Policy: Users can see their own analyses.
 CREATE POLICY "Allow individual user access" ON public.analyses FOR SELECT
-USING (auth.uid() = user_id::uuid);
+USING (auth.uid()::text = user_id::text);
 -- Policy: Allow service roles to manage data
 CREATE POLICY "Allow service role access" ON public.analyses FOR ALL
 USING (true) WITH CHECK (true);
@@ -54,7 +54,7 @@ CREATE TABLE public.recommendations (
 ALTER TABLE public.recommendations ENABLE ROW LEVEL SECURITY;
 -- Policy: Users can see their own recommendations.
 CREATE POLICY "Allow individual user access" ON public.recommendations FOR SELECT
-USING (auth.uid() = user_id::uuid);
+USING (auth.uid()::text = user_id::text);
 -- Policy: Allow service roles to manage data
 CREATE POLICY "Allow service role access" ON public.recommendations FOR ALL
 USING (true) WITH CHECK (true);

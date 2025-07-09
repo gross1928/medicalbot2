@@ -7,7 +7,7 @@ const openai = new OpenAI({
 const analyzeText = async (text) => {
     if (!process.env.OPENAI_API_KEY) {
         console.error('OPENAI_API_KEY not found in .env file');
-        return 'OpenAI API key is not configured. Please contact the administrator.';
+        return 'Ключ OpenAI API не настроен. Пожалуйста, свяжитесь с администратором.';
     }
 
     try {
@@ -40,14 +40,14 @@ IMPORTANT: Always include a disclaimer that you are an AI assistant and your rec
         return response.choices[0].message.content;
     } catch (error) {
         console.error('Error analyzing with OpenAI:', error);
-        return 'Sorry, I encountered an error while analyzing the data. Please try again later.';
+        return 'Извините, произошла ошибка при анализе данных. Пожалуйста, попробуйте позже.';
     }
 };
 
 const analyzeImage = async (imageUrl, promptText = 'Analyze the attached medical test results.') => {
     if (!process.env.OPENAI_API_KEY) {
         console.error('OPENAI_API_KEY not found in .env file');
-        return 'OpenAI API key is not configured. Please contact the administrator.';
+        return 'Ключ OpenAI API не настроен. Пожалуйста, свяжитесь с администратором.';
     }
 
     try {
@@ -88,7 +88,7 @@ IMPORTANT: Always include a disclaimer that you are an AI assistant and your rec
         return response.choices[0].message.content;
     } catch (error) {
         console.error('Error analyzing image with OpenAI:', error);
-        return 'Sorry, I encountered an error while analyzing the image. Please try again later.';
+        return 'Извините, произошла ошибка при анализе изображения. Пожалуйста, попробуйте позже.';
     }
 };
 
