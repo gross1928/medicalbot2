@@ -20,7 +20,45 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 }
 
 // Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token, { 
+    polling: {
+        interval: 1000,
+        autoStart: true,
+        params: {
+            timeout: 10,
+        }
+    }
+});
+
+// Handle polling errors
+bot.on('polling_error', (error) => {
+    console.error('Polling error:', error);
+    
+    if (error.code === 'ETELEGRAM' && error.message.includes('409')) {
+        console.error('❌ ОШИБКА: Другой экземпляр бота уже запущен!');
+        console.error('Пожалуйста, остановите все другие экземпляры бота перед запуском нового.');
+        console.error('Используйте команду: taskkill /F /IM node.exe (Windows) или pkill node (Linux/Mac)');
+        process.exit(1);
+    }
+});
+
+// Handle webhook errors
+bot.on('webhook_error', (error) => {
+    console.error('Webhook error:', error);
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Получен сигнал SIGINT. Останавливаю бота...');
+    bot.stopPolling();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('Получен сигнал SIGTERM. Останавливаю бота...');
+    bot.stopPolling();
+    process.exit(0);
+});
 
 // Добавим меню команд, чтобы Telegram показывал их в интерфейсе
 bot.setMyCommands([
@@ -241,7 +279,15 @@ bot.on('photo', async (msg) => {
 
     } catch (error) {
         console.error('Error processing photo:', error);
-        bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего фото.');
+        
+        // More specific error messages
+        if (error.code === 'ETELEGRAM') {
+            bot.sendMessage(chatId, 'Извините, произошла ошибка при получении фото от Telegram. Попробуйте ещё раз.');
+        } else if (error.message.includes('Supabase')) {
+            bot.sendMessage(chatId, 'Извините, произошла ошибка при загрузке файла. Попробуйте позже.');
+        } else {
+            bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего фото. Попробуйте ещё раз.');
+        }
     }
 });
 
@@ -286,7 +332,15 @@ bot.on('document', async (msg) => {
             bot.sendMessage(chatId, recommendationText);
         } catch (error) {
             console.error('Error processing document (image):', error);
-            bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего файла.');
+            
+            // More specific error messages
+            if (error.code === 'ETELEGRAM') {
+                bot.sendMessage(chatId, 'Извините, произошла ошибка при получении файла от Telegram. Попробуйте ещё раз.');
+            } else if (error.message.includes('Supabase')) {
+                bot.sendMessage(chatId, 'Извините, произошла ошибка при загрузке файла. Попробуйте позже.');
+            } else {
+                bot.sendMessage(chatId, 'Извините, произошла ошибка при обработке вашего файла. Попробуйте ещё раз.');
+            }
         }
     } else {
         // Handle other file types like PDF, etc.
